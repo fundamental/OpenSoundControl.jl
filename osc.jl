@@ -27,7 +27,7 @@ function rtosc_type(msg::Array{Uint8}, nargument::Int)#::Char
     return strip_args(rtosc_argument_string(msg))[nargument+1]
 end
 
-
+align(pos) = pos+(4-(pos-1)%4)
 function arg_off(msg::Array{Uint8}, idx::Int)#::Int
     if(!has_reserved(rtosc_type(msg,idx)))
         return 0;
@@ -43,7 +43,7 @@ function arg_off(msg::Array{Uint8}, idx::Int)#::Int
     while(msg[pos] != 0)   pos += 1 end
 
     #Alignment
-    pos += 4-pos%4;
+    pos = align(pos)
 
     #ignore any leading '[' or ']'
     while(args[argc] in "[]") argc += 1 end
@@ -58,7 +58,7 @@ function arg_off(msg::Array{Uint8}, idx::Int)#::Int
             pos += 4;
         elseif(arg in "Ss")
             while(msg[pos += 1] != 0) end
-            pos += 4-pos%4;
+            pos = align(pos)
         elseif(arg == 'b')
             bundle_length |= (msg[@incfp(pos)] << 24);
             bundle_length |= (msg[@incfp(pos)] << 16);
@@ -80,9 +80,9 @@ function vsosc_null(address::ASCIIString,
                     arguments::ASCIIString,
                     args...)
     pos::Int  = length(address)
-    pos      += 4-pos%4#get 32 bit alignment
+    pos       = align(pos)
     pos      += 1+length(arguments)
-    pos      += 4-pos%4
+    pos       = align(pos)
 
     arg_pos = 1;
 
@@ -97,11 +97,11 @@ function vsosc_null(address::ASCIIString,
         elseif(arg in "sS")
             s::ASCIIString = args[@incfp(arg_pos)];
             pos += length(s);
-            pos += 4-pos%4;
+            pos =  align(pos)
         elseif(arg in "b")
             i::Int32 = sizeof(args[@incfp(arg_pos)])
             pos += 4 + i;
-            pos += 4-pos%4;
+            pos  = align(pos)
         end #other args classes are ignored
     end
 
@@ -113,6 +113,7 @@ function rtosc_amessage(buffer::Array{Uint8},
                         address::ASCIIString,
                         arguments::ASCIIString,
                         args...)
+    println("rtosc_amessage")
     total_len::Int = vsosc_null(address, arguments, args...);
 
     for(i=1:total_len)
@@ -127,14 +128,15 @@ function rtosc_amessage(buffer::Array{Uint8},
     pos::Int = 1;
     #Address
     for(C = address) buffer[@incfp(pos)] = C end
-    pos += 4-pos%4;#get 32 bit alignment
+    pos = align(pos)
 
     #Arguments
     buffer[@incfp(pos)] = ',';
     for(A=arguments) buffer[@incfp(pos)] = A; end
-    pos += 4-pos%4;
+    pos = align(pos)
 
     arg_pos::Int = 1;
+    println("argument handling...")
     for(arg = arguments)
         @assert(arg != 0);
         if(arg in "htd")
@@ -164,7 +166,7 @@ function rtosc_amessage(buffer::Array{Uint8},
             for(C = s)
                 buffer[@incfp(pos)] = C
             end
-            pos += 4-pos%4;
+            pos = align(pos)
         elseif(arg == 'b')
             b = args[@incfp(arg_pos)];
             i = sizeof(b);
@@ -175,11 +177,11 @@ function rtosc_amessage(buffer::Array{Uint8},
             for(U = b)
                 buffer[@incfp(pos)] = uint8(U);
             end
-            pos += 4-pos%4;
+            pos = align(pos)
         end
     end
 
-    return pos;
+    return pos-1;
 end
 
 function rtosc_argument(msg::Array{Uint8}, idx::Int)
@@ -248,21 +250,21 @@ function rtosc_argument(msg::Array{Uint8}, idx::Int)
     return Nothing;
 end
 
-buffer = Array(Uint8,1024)
-buf_size = rtosc_amessage(buffer, 1024, "/random/address", "sif",
-                          "string", 0xdeadbeef, float32(12.0))
-println()
-#println(buffer)
-println(string(map(x->(hex(x,2)), buffer[1:buf_size])...))
-println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:buf_size])...))
-println("argument string is=", rtosc_argument_string(buffer))
-
-println("arg 0=", rtosc_argument(buffer, 0))
-println("arg 1=", rtosc_argument(buffer, 1))
-println("arg 2=", rtosc_argument(buffer, 2))
+#buffer = Array(Uint8,1024)
+#buf_size = rtosc_amessage(buffer, 1024, "/random/address", "sif",
+#                          "string", 0xdeadbeef, float32(12.0))
+#println()
+##println(buffer)
+#println(string(map(x->(hex(x,2)), buffer[1:buf_size])...))
+#println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:buf_size])...))
+#println("argument string is=", rtosc_argument_string(buffer))
+#
+#println("arg 0=", rtosc_argument(buffer, 0))
+#println("arg 1=", rtosc_argument(buffer, 1))
+#println("arg 2=", rtosc_argument(buffer, 2))
 
 #Fully check basics
-function test_it()
+function test_it_fat()
     i::Int32          = 42;             #integer
     f::Float32        = 0.25;           #float
     s::ASCIIString    = "string";       #string
@@ -321,4 +323,53 @@ function test_it()
     println(rtosc_type(buffer,14), " I");
 end
 
-test_it()
+function test_it_osc_spec()
+    buffer::Array{Uint8} = Array(Uint8, 256)
+    println("Start OSC Spec")
+    message_one::Array{Uint8} = [
+    0x2f, 0x6f, 0x73, 0x63,
+    0x69, 0x6c, 0x6c, 0x61,
+    0x74, 0x6f, 0x72, 0x2f,
+    0x34, 0x2f, 0x66, 0x72,
+    0x65, 0x71, 0x75, 0x65,
+    0x6e, 0x63, 0x79, 0x00,
+    0x2c, 0x66, 0x00, 0x00,
+    0x43, 0xdc, 0x00, 0x00,
+    ];
+
+    println("Continue OSC Spec")
+    message_two::Array{Uint8} = [
+    0x2f, 0x66, 0x6f, 0x6f,
+    0x00, 0x00, 0x00, 0x00,
+    0x2c, 0x69, 0x69, 0x73,
+    0x66, 0x66, 0x00, 0x00,
+    0x00, 0x00, 0x03, 0xe8,
+    0xff, 0xff, 0xff, 0xff,
+    0x68, 0x65, 0x6c, 0x6c,
+    0x6f, 0x00, 0x00, 0x00,
+    0x3f, 0x9d, 0xf3, 0xb6,
+    0x40, 0xb5, 0xb2, 0x2d,
+    ];
+
+    println("Start Message")
+    @assert((len=rtosc_amessage(buffer, 256, "/oscillator/4/frequency",
+                          "f", float32(440.0))) != 0)
+    println(string(map(x->(hex(x,2)), buffer[1:len])...))
+    println(string(map(x->(hex(x,2)), message_one)...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_one)...))
+    #rtosc_amessage(buffer, 256, "/oscillator/4/frequency", "f", float32(440.0))
+    @assert(buffer[1:length(message_one)] == message_one)
+
+    @assert((len = rtosc_amessage(buffer, 256, "/foo", "iisff",
+                1000, -1, "hello", float32(1.234), float32(5.678))) != 0)
+    println(string(map(x->(hex(x,2)), buffer[1:len])...))
+    println(string(map(x->(hex(x,2)), message_two)...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_two)...))
+    @assert(buffer[1:len] == message_two)
+end
+
+test_it_osc_spec()
+test_it_fat()
+
