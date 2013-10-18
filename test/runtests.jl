@@ -98,7 +98,7 @@ function test_it_osc_spec()
     @test buffer[1:length(message_one)] == message_one
 
     len = OSC.rtosc_amessage(buffer, 256, "/foo", "iisff",
-                         1000, -1, "hello", float32(1.234), float32(5.678))
+                         int32(1000), int32(-1), "hello", float32(1.234), float32(5.678))
     println(string(map(x->(hex(x,2)), buffer[1:len])...))
     println(string(map(x->(hex(x,2)), message_two)...))
     println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
