@@ -36,29 +36,29 @@ function test_it_fat()
     #nil
     #inf
 
-    buffer = Array(Uint8, 1024);
-    len    = OSC.rtosc_amessage(buffer, 1024, "/dest",
+    msg = OSC.message("/dest",
     "[ifsbhtdScrmTFNI]", i,f,s,b,h,t,d,S,c,r,m);
+    OSC.show(msg)
 
     #println(string(map(x->(hex(x,2)), buffer[1:len])...))
     #println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
     #println("argument string is=", rtosc_argument_string(buffer))
 
-    @test OSC.rtosc_argument(buffer, 0)  == i
-    @test OSC.rtosc_argument(buffer, 1)  == f
-    @test OSC.rtosc_argument(buffer, 2)  == s
-    @test OSC.stringify(OSC.rtosc_argument(buffer, 3)) == b
-    @test OSC.rtosc_argument(buffer, 4)  == h
-    @test OSC.rtosc_argument(buffer, 5)  == t
-    @test OSC.rtosc_argument(buffer, 6)  == d
-    @test OSC.rtosc_argument(buffer, 7)  == S
-    @test OSC.rtosc_argument(buffer, 8)  == c
-    @test OSC.rtosc_argument(buffer, 9)  == r
-    @test OSC.rtosc_argument(buffer, 10) == m
-    @test OSC.rtosc_type(buffer,11) == 'T'
-    @test OSC.rtosc_type(buffer,12) == 'F'
-    @test OSC.rtosc_type(buffer,13) == 'N'
-    @test OSC.rtosc_type(buffer,14) == 'I'
+    @test msg[0]  == i
+    @test msg[1]  == f
+    @test msg[2]  == s
+    @test OSC.stringify(msg[3]) == b
+    @test msg[4]  == h
+    @test msg[5]  == t
+    @test msg[6]  == d
+    @test msg[7]  == S
+    @test msg[8]  == c
+    @test msg[9]  == r
+    @test msg[10] == m
+    @test OSC.argType(msg,11) == 'T'
+    @test OSC.argType(msg,12) == 'F'
+    @test OSC.argType(msg,13) == 'N'
+    @test OSC.argType(msg,14) == 'I'
 end
 
 function test_it_osc_spec()
@@ -96,6 +96,7 @@ function test_it_osc_spec()
     println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_one)...))
     @test len == length(message_one)
     @test buffer[1:length(message_one)] == message_one
+    OSC.show(OSC.OscMsg(buffer))
 
     len = OSC.rtosc_amessage(buffer, 256, "/foo", "iisff",
                          int32(1000), int32(-1), "hello", float32(1.234), float32(5.678))
@@ -105,9 +106,11 @@ function test_it_osc_spec()
     println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_two)...))
     @test len == length(message_two)
     @test buffer[1:len] == message_two
+    OSC.show(OSC.OscMsg(buffer))
 end
 
 if test_type in ["ALL", "TEST", "INSTALL"]
     test_it_osc_spec()
     test_it_fat()
+    println("Done...")
 end
