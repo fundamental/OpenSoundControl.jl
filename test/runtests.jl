@@ -1,5 +1,6 @@
 using Base.Test
 require("OSC")
+using OSC
 
 test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
 
@@ -36,9 +37,8 @@ function test_it_fat()
     #nil
     #inf
 
-    msg = OSC.message("/dest",
-    "[ifsbhtdScrmTFNI]", i,f,s,b,h,t,d,S,c,r,m);
-    OSC.show(msg)
+    msg = OscMsg("/dest", "[ifsbhtdScrmTFNI]", i,f,s,b,h,t,d,S,c,r,m);
+    show(msg)
 
     #println(string(map(x->(hex(x,2)), buffer[1:len])...))
     #println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
@@ -62,7 +62,6 @@ function test_it_fat()
 end
 
 function test_it_osc_spec()
-    buffer::Array{Uint8} = Array(Uint8, 256)
     println("Starting OSC Spec...")
     message_one::Array{Uint8} = [
     0x2f, 0x6f, 0x73, 0x63,
@@ -76,37 +75,36 @@ function test_it_osc_spec()
     ];
 
     message_two::Array{Uint8} = [
-    0x2f, 0x66, 0x6f, 0x6f,
-    0x00, 0x00, 0x00, 0x00,
+    0x2f, 0x66, 0x6f, 0x6f, #4
+    0x00, 0x00, 0x00, 0x00, #8
     0x2c, 0x69, 0x69, 0x73,
-    0x66, 0x66, 0x00, 0x00,
+    0x66, 0x66, 0x00, 0x00, #16
     0x00, 0x00, 0x03, 0xe8,
     0xff, 0xff, 0xff, 0xff,
     0x68, 0x65, 0x6c, 0x6c,
-    0x6f, 0x00, 0x00, 0x00,
-    0x3f, 0x9d, 0xf3, 0xb6,
-    0x40, 0xb5, 0xb2, 0x2d,
+    0x6f, 0x00, 0x00, 0x00, #32
+    0x3f, 0x9d, 0xf3, 0xb6, #36
+    0x40, 0xb5, 0xb2, 0x2d, #40
     ];
 
-    len=OSC.rtosc_amessage(buffer, 256, "/oscillator/4/frequency", "f", float32(440.0))
+    osc=OscMsg("/oscillator/4/frequency", "f", float32(440.0))
 
-    println(string(map(x->(hex(x,2)), buffer[1:len])...))
+    println(string(map(x->(hex(x,2)), osc.data)...))
     println(string(map(x->(hex(x,2)), message_one)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), osc.data)...))
     println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_one)...))
-    @test len == length(message_one)
-    @test buffer[1:length(message_one)] == message_one
-    OSC.show(OSC.OscMsg(buffer))
+    @test length(osc.data) == length(message_one)
+    @test osc.data == message_one
+    show(osc)
 
-    len = OSC.rtosc_amessage(buffer, 256, "/foo", "iisff",
-                         int32(1000), int32(-1), "hello", float32(1.234), float32(5.678))
-    println(string(map(x->(hex(x,2)), buffer[1:len])...))
+    osc = OscMsg("/foo", "iisff", int32(1000), int32(-1), "hello", float32(1.234), float32(5.678))
+    println(string(map(x->(hex(x,2)), osc.data)...))
     println(string(map(x->(hex(x,2)), message_two)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
+    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ".  "), osc.data)...))
     println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_two)...))
-    @test len == length(message_two)
-    @test buffer[1:len] == message_two
-    OSC.show(OSC.OscMsg(buffer))
+    @test length(osc.data) == length(message_two)
+    @test osc.data == message_two
+    show(osc)
 end
 
 if test_type in ["ALL", "TEST", "INSTALL"]

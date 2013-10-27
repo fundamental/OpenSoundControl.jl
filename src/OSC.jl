@@ -1,4 +1,5 @@
 module OSC
+import Base.show
 macro incfp(x) quote begin
             local gensym_ = $(esc(x))
             $(esc(x)) = $(esc(x))+1
@@ -93,7 +94,7 @@ end
 function vsosc_null(address::ASCIIString,
                     arguments::ASCIIString,
                     args...)
-    pos::Int  = length(address)
+    pos::Int  = length(address)+1
     pos       = align(pos)
     pos      += 1+length(arguments)
     pos       = align(pos)
@@ -119,7 +120,7 @@ function vsosc_null(address::ASCIIString,
         end #other args classes are ignored
     end
 
-    return pos;
+    return pos-1;
 end
 
 function rtosc_amessage(buffer::Array{Uint8},
@@ -195,6 +196,8 @@ function rtosc_amessage(buffer::Array{Uint8},
 
     return pos-1;
 end
+
+OscMsg(address, arguments, args...) = message(address, arguments, args...)
 
 function message(address::ASCIIString,
                  arguments::ASCIIString,
@@ -273,15 +276,15 @@ end
 
 getindex(msg::OscMsg, idx::Int) = rtosc_argument(msg, idx)
 
-function show(msg::OscMsg)
-    println("OSC Message to ", stringify(msg.data))
-    println("    Arguments:");
+function show(io::IO, msg::OscMsg)
+    println(io, "OSC Message to ", stringify(msg.data))
+    println(io, "    Arguments:");
     for i=1:narguments(msg)
-        showField(msg,i)
+        showField(io, msg,i)
     end
 end
 
-function showField(msg::OscMsg, arg_id)
+function showField(io::IO, msg::OscMsg, arg_id)
     map = ['i' Int32; 'f' Float32; 's' String; 'b' :Blob; 'h' Int32; 't' Uint64;
     'd' Float64; 'S' Symbol; 'c' Char; 'r' :RBG; 'm' :Midi; 'T' true;
     'F' false; 'N' Nothing]
@@ -292,11 +295,14 @@ function showField(msg::OscMsg, arg_id)
     if(issubtype(typeof(value), Array))
         value = value'
     end
-    @printf("    #%2d %c:", arg_id, typeChar);
+    @printf(io, "    #%2d %c:", arg_id, typeChar);
     print(dict[typeChar]," - ", value)
     if(!issubtype(typeof(value), Array))
         println()
     end
 
 end
+
+export OscMsg
+
 end
