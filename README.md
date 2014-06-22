@@ -22,7 +22,7 @@ S::ASCIIString    = "Symbol";       #symbol
 c::Char           = 'J';            #character
 r::Int32          = 0x12345678;     #RGBA
 m::Array{Uint8,1} = [0x12,0x23,     #midi
-0x34,0x45];
+                     0x34,0x45];
 #true
 #false
 #nil
@@ -31,6 +31,31 @@ m::Array{Uint8,1} = [0x12,0x23,     #midi
 msg = OscMsg("/dest", "[ifsbhtdScrmTFNI]", i,f,s,b,h,t,d,S,c,r,m);
 show(msg)
 ```
+
+This produces:
+
+```
+OSC Message to /dest
+    Arguments:
+    # 1 i:Int32 - 42
+    # 2 f:Float32 - 0.25
+    # 3 s:String - string
+    # 4 b:Blob - Uint8[115 116 114 105 110 103]
+    # 5 h:Int32 - -125
+    # 6 t:Uint64 - 22412
+    # 7 d:Float64 - 0.125
+    # 8 S:Symbol - Symbol
+    # 9 c:Char - J
+    #10 r:RBG - 305419896
+    #11 m:Midi - Uint8[18 35 52 69]
+    #12 T: - true
+    #13 F: - false
+    #14 N:Nothing - nothing
+    #15 I:Inf - nothing
+```
+
+Accessing the fields is done via the [] operator.
+
 
 ##Networked Usage
 
@@ -55,7 +80,7 @@ msg1 = OSC.message("/hello world", "sSif", "strings", "symbols", 234,
 float32(2.3))
 send(sock1, ip"127.0.0.1", 7777, msg1.data)
 ```
-To receive a message over port 7778
+To receive a message over port 7777
 
 
 ##TODO
