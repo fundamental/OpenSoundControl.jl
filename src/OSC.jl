@@ -312,11 +312,7 @@ function showField(io::IO, msg::OscMsg, arg_id)
         value = value'
     end
     @printf(io, "    #%2d %c:", arg_id, typeChar);
-    print(dict[typeChar]," - ", value)
-    if(!issubtype(typeof(value), Array))
-        println()
-    end
-
+    println(dict[typeChar]," - ", value)
 end
 
 export OscMsg
