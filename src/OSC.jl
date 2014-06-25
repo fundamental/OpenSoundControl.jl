@@ -16,6 +16,7 @@
 
 module OSC
 import Base.show
+export OscMsg
 macro incfp(x) quote begin
             local gensym_ = $(esc(x))
             $(esc(x)) = $(esc(x))+1
@@ -315,6 +316,5 @@ function showField(io::IO, msg::OscMsg, arg_id)
     println(dict[typeChar]," - ", value)
 end
 
-export OscMsg
 
 end
