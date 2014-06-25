@@ -67,11 +67,12 @@ In the first one run
 ```julia
 using OSC
 sock2 = UdpSocket()
-bind(sock2, ip"127.0.0.1", 7777)#should return true
+bind(sock2, ip"127.0.0.1", 7777)
 msg2 = OscMsg(recv(sock2))
 ```
 
-The first instance will now wait for the second to send an OSC message
+The first instance will now wait for the second to send an OSC message.
+To send the an OSC message, in the second window type.
 
 ```julia
 using OSC
@@ -80,7 +81,6 @@ msg1 = OSC.message("/hello world", "sSif", "strings", "symbols", 234,
 float32(2.3))
 send(sock1, ip"127.0.0.1", 7777, msg1.data)
 ```
-To receive a message over port 7777
 
 
 ##TODO
