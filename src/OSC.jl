@@ -248,7 +248,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             t |= (uint64(msg.data[@incfp(arg_pos)]) << 8);
             t |= (uint64(msg.data[@incfp(arg_pos)]));
             if(typeChar == 'h')
-                return int64(t)
+                return reinterpret(Int64, t)
             elseif(typeChar == 'd')
                 return reinterpret(Float64, t);
             else
@@ -257,7 +257,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
         elseif(typeChar in "f")
             return reinterpret(Float32,msg.data[arg_pos+(3:-1:0)])[1]
         elseif(typeChar in "rci")
-            i::Int32 = 0
+            i::Uint32 = 0
             i |= (uint32(msg.data[@incfp(arg_pos)]) << 24);
             i |= (uint32(msg.data[@incfp(arg_pos)]) << 16);
             i |= (uint32(msg.data[@incfp(arg_pos)]) << 8);
@@ -267,7 +267,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             elseif(typeChar == 'c')
                 return char(i)
             else
-                return i
+                return reinterpret(Int32, i)
             end
         elseif(typeChar in "m")
             m = Array(Uint8, 4)
@@ -277,7 +277,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             m[4] = msg.data[@incfp(arg_pos)]
             return m
         elseif(typeChar in "b")
-            len::Int32 = 0
+            len::Uint32 = 0
             len |= (msg.data[@incfp(arg_pos)] << 24);
             len |= (msg.data[@incfp(arg_pos)] << 16);
             len |= (msg.data[@incfp(arg_pos)] << 8);
@@ -312,8 +312,14 @@ function showField(io::IO, msg::OscMsg, arg_id)
     if(issubtype(typeof(value), Array))
         value = value'
     end
+    fieldClass = dict[typeChar]
+    if(fieldClass == true)
+        fieldClass = 'T'
+    elseif(fieldClass == false)
+        fieldClass = 'F'
+    end
     @printf(io, "    #%2d %c:", arg_id, typeChar);
-    println(dict[typeChar]," - ", value)
+    println(fieldClass," - '", value,"'")
 end
 
 
