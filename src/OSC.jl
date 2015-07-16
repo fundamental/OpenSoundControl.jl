@@ -57,8 +57,8 @@ has_reserved(typeChar::Char) = typeChar in "isbfhtdSrmc"
 nreserved(args::ASCIIString) = sum(map(has_reserved, collect(args)))
 
 function argType(msg::OscMsg, nargument::Int)#::Char
-    @assert(nargument < narguments(msg));
-    return strip_args(names(msg))[nargument+1]
+    @assert(nargument > 0 && nargument <= narguments(msg));
+    return strip_args(names(msg))[nargument]
 end
 
 align(pos) = pos+(4-(pos-1)%4)
@@ -82,7 +82,7 @@ function arg_off(msg::OscMsg, idx::Int)#::Int
     #ignore any leading '[' or ']'
     while(args[argc] in "[]") argc += 1 end
 
-    while(idx != 0)
+    while(idx != 1)
         bundle_length::Uint32 = 0;
         arg = args[argc]
         argc += 1
@@ -309,8 +309,8 @@ function showField(io::IO, msg::OscMsg, arg_id)
     'F' false; 'N' Nothing]
     dict = Dict{Char, Any}(map[:,1][:],map[:,2][:])
     dict['I'] = Inf
-    typeChar::Char = argType(msg, arg_id-1)
-    value = msg[arg_id-1]
+    typeChar::Char = argType(msg, arg_id)
+    value = msg[arg_id]
     if(issubtype(typeof(value), Array))
         value = value'
     end

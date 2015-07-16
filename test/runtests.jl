@@ -61,21 +61,21 @@ function test_it_fat()
     #println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
     #println("argument string is=", rtosc_argument_string(buffer))
 
-    @test msg[0]  == i
-    @test msg[1]  == f
-    @test msg[2]  == s
-    @test OSC.stringify(msg[3]) == b
-    @test msg[4]  == h
-    @test msg[5]  == t
-    @test msg[6]  == d
-    @test msg[7]  == S
-    @test msg[8]  == c
-    @test msg[9]  == r
-    @test msg[10] == m
-    @test OSC.argType(msg,11) == 'T'
-    @test OSC.argType(msg,12) == 'F'
-    @test OSC.argType(msg,13) == 'N'
-    @test OSC.argType(msg,14) == 'I'
+    @test msg[1]  == i
+    @test msg[2]  == f
+    @test msg[3]  == s
+    @test OSC.stringify(msg[4]) == b
+    @test msg[5]  == h
+    @test msg[6]  == t
+    @test msg[7]  == d
+    @test msg[8]  == S
+    @test msg[9]  == c
+    @test msg[10]  == r
+    @test msg[11] == m
+    @test OSC.argType(msg,12) == 'T'
+    @test OSC.argType(msg,13) == 'F'
+    @test OSC.argType(msg,14) == 'N'
+    @test OSC.argType(msg,15) == 'I'
 end
 
 function test_it_osc_spec()
