@@ -16,7 +16,7 @@
 
 module OSC
 import Base.show
-export OscMsg
+export OscMsg, path
 macro incfp(x) quote begin
             local gensym_ = $(esc(x))
             $(esc(x)) = $(esc(x))+1
@@ -26,6 +26,8 @@ end end end
 type OscMsg
     data::Array{Uint8}
 end
+
+path(msg::OscMsg) = stringify(msg.data)
 
 function stringify(data::Array{Uint8})
     zeroInd = find(data.== 0)

@@ -124,8 +124,14 @@ function test_it_osc_spec()
     show(osc)
 end
 
+function test_path()
+    osc = OscMsg("/foo", "f", float32(1.234))
+    @test path(osc) == "/foo"
+end
+
 if test_type in ["ALL", "TEST", "INSTALL"]
     test_it_osc_spec()
     test_it_fat()
+    test_path()
     println("Done...")
 end
