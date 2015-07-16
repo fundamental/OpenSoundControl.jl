@@ -104,28 +104,28 @@ function test_it_osc_spec()
     0x40, 0xb5, 0xb2, 0x2d, #40
     ];
 
-    osc=OscMsg("/oscillator/4/frequency", "f", float32(440.0))
+    osc=OscMsg("/oscillator/4/frequency", "f", Float32(440.0))
 
     println(string(map(x->(hex(x,2)), osc.data)...))
     println(string(map(x->(hex(x,2)), message_one)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), osc.data)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_one)...))
+    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), osc.data)...))
+    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), message_one)...))
     @test length(osc.data) == length(message_one)
     @test osc.data == message_one
     show(osc)
 
-    osc = OscMsg("/foo", "iisff", int32(1000), int32(-1), "hello", float32(1.234), float32(5.678))
+    osc = OscMsg("/foo", "iisff", Int32(1000), Int32(-1), "hello", Float32(1.234), Float32(5.678))
     println(string(map(x->(hex(x,2)), osc.data)...))
     println(string(map(x->(hex(x,2)), message_two)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ".  "), osc.data)...))
-    println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), message_two)...))
+    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ".  "), osc.data)...))
+    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), message_two)...))
     @test length(osc.data) == length(message_two)
     @test osc.data == message_two
     show(osc)
 end
 
 function test_path()
-    osc = OscMsg("/foo", "f", float32(1.234))
+    osc = OscMsg("/foo", "f", Float32(1.234))
     @test path(osc) == "/foo"
 end
 

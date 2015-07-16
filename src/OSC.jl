@@ -17,6 +17,7 @@
 module OSC
 import Base.show
 export OscMsg, path
+
 macro incfp(x) quote begin
             local gensym_ = $(esc(x))
             $(esc(x)) = $(esc(x))+1
@@ -32,11 +33,11 @@ path(msg::OscMsg) = stringify(msg.data)
 function stringify(data::Array{Uint8})
     zeroInd = find(data.== 0)
     if(length(zeroInd) == 0)
-        return string(map(char, data)...)
+        return string(map(Char, data)...)
     elseif(zeroInd[1] == 0)
         return nothing
     else
-        return string(map(char, data[1:zeroInd[1]-1])...)
+        return string(map(Char, data[1:zeroInd[1]-1])...)
     end
 end
 
@@ -47,7 +48,7 @@ function names(msg::OscMsg)#::ASCIIString
     return stringify(msg.data[pos+1:end]);  #skip comma
 end
 
-strip_args(args::ASCIIString) = replace(replace(args,"]",""),"[","")
+strip_args(args::AbstractString) = replace(replace(args,"]",""),"[","")
 
 function narguments(msg::OscMsg)
     length(strip_args(names(msg)))
@@ -207,7 +208,7 @@ function rtosc_amessage(buffer::Array{Uint8},
             buffer[@incfp(pos)] = ((i>>8) & 0xff);
             buffer[@incfp(pos)] = (i & 0xff);
             for(U = b)
-                buffer[@incfp(pos)] = uint8(U);
+                buffer[@incfp(pos)] = Uint8(U);
             end
             pos = align(pos)
         end
@@ -241,14 +242,14 @@ function rtosc_argument(msg::OscMsg, idx::Int)
 
         if(typeChar in "htd")
             t::Uint64 = 0
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 56);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 48);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 40);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 32);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 24);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 16);
-            t |= (uint64(msg.data[@incfp(arg_pos)]) << 8);
-            t |= (uint64(msg.data[@incfp(arg_pos)]));
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 56);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 48);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 40);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 32);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 24);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 16);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 8);
+            t |= (Uint64(msg.data[@incfp(arg_pos)]));
             if(typeChar == 'h')
                 return reinterpret(Int64, t)
             elseif(typeChar == 'd')
@@ -260,16 +261,16 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             return reinterpret(Float32,msg.data[arg_pos+(3:-1:0)])[1]
         elseif(typeChar in "rci")
             i::Uint32 = 0
-            i |= (uint32(msg.data[@incfp(arg_pos)]) << 24);
-            i |= (uint32(msg.data[@incfp(arg_pos)]) << 16);
-            i |= (uint32(msg.data[@incfp(arg_pos)]) << 8);
-            i |= (uint32(msg.data[@incfp(arg_pos)]));
+            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 24);
+            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 16);
+            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 8);
+            i |= (Uint32(msg.data[@incfp(arg_pos)]));
             if(typeChar == 'r')
-                return uint32(i)
+                return Uint32(i)
             elseif(typeChar == 'c')
-                return char(i)
+                return Char(i)
             else
-                return reinterpret(Int32, i)
+                return reinterpret(Int32, i);
             end
         elseif(typeChar in "m")
             m = Array(Uint8, 4)
@@ -279,7 +280,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             m[4] = msg.data[@incfp(arg_pos)]
             return m
         elseif(typeChar in "b")
-            len::Uint32 = 0
+            len::Int32 = 0
             len |= (msg.data[@incfp(arg_pos)] << 24);
             len |= (msg.data[@incfp(arg_pos)] << 16);
             len |= (msg.data[@incfp(arg_pos)] << 8);
@@ -307,21 +308,15 @@ function showField(io::IO, msg::OscMsg, arg_id)
     map = ['i' Int32; 'f' Float32; 's' String; 'b' :Blob; 'h' Int32; 't' Uint64;
     'd' Float64; 'S' Symbol; 'c' Char; 'r' :RBG; 'm' :Midi; 'T' true;
     'F' false; 'N' Nothing]
-    dict = Dict{Char, Any}(map[:,1][:],map[:,2][:])
+    dict = Dict{Char, Any}(zip(Vector{Char}(map[:,1][:]),map[:,2][:]))
     dict['I'] = Inf
     typeChar::Char = argType(msg, arg_id)
     value = msg[arg_id]
     if(issubtype(typeof(value), Array))
         value = value'
     end
-    fieldClass = dict[typeChar]
-    if(fieldClass == true)
-        fieldClass = 'T'
-    elseif(fieldClass == false)
-        fieldClass = 'F'
-    end
     @printf(io, "    #%2d %c:", arg_id, typeChar);
-    println(fieldClass," - '", value,"'")
+    println(dict[typeChar]," - ", value)
 end
 
 
