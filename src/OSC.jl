@@ -1,21 +1,22 @@
-#OSC.jl
-#Copyright (c) 2014, Mark McCurry, All rights reserved.
+# OSC.jl
+# Copyright (c) 2014, Mark McCurry, All rights reserved.
 #
-#This library is free software; you can redistribute it and/or
-#modify it under the terms of the GNU Lesser General Public
-#License as published by the Free Software Foundation; either
-#version 3.0 of the License, or (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 3.0 of the License, or (at your option) any later version.
 #
-#This library is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-#Lesser General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
 #
-#You should have received a copy of the GNU Lesser General Public
-#License along with this library.
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library.
 
 module OSC
-import Base.show
+
+import Base: show, getindex
 export OscMsg, path
 
 macro incfp(x) quote begin
@@ -25,27 +26,27 @@ macro incfp(x) quote begin
 end end end
 
 type OscMsg
-    data::Array{Uint8}
+    data::Array{UInt8}
 end
 
 path(msg::OscMsg) = stringify(msg.data)
 
-function stringify(data::Array{Uint8})
+function stringify(data::Array{UInt8})
     zeroInd = find(data.== 0)
-    if(length(zeroInd) == 0)
+    if length(zeroInd) == 0
         return string(map(Char, data)...)
-    elseif(zeroInd[1] == 0)
+    elseif zeroInd[1] == 0
         return nothing
     else
         return string(map(Char, data[1:zeroInd[1]-1])...)
     end
 end
 
-function names(msg::OscMsg)#::ASCIIString
+function names(msg::OscMsg) #::String
     pos = 1
     while(msg.data[pos += 1] != 0) end      #skip pattern
     while(msg.data[pos += 1] == 0) end      #skip null
-    return stringify(msg.data[pos+1:end]);  #skip comma
+    return stringify(msg.data[pos+1:end])   #skip comma
 end
 
 strip_args(args::AbstractString) = replace(replace(args,"]",""),"[","")
@@ -55,267 +56,282 @@ function narguments(msg::OscMsg)
 end
 
 has_reserved(typeChar::Char) = typeChar in "isbfhtdSrmc"
-nreserved(args::ASCIIString) = sum(map(has_reserved, collect(args)))
+nreserved(args::String) = sum(map(has_reserved, collect(args)))
 
-function argType(msg::OscMsg, nargument::Int)#::Char
-    @assert(nargument > 0 && nargument <= narguments(msg));
+function argType(msg::OscMsg, nargument::Int) #::Char
+    @assert(nargument > 0 && nargument <= narguments(msg))
     return strip_args(names(msg))[nargument]
 end
 
 align(pos) = pos+(4-(pos-1)%4)
-function arg_off(msg::OscMsg, idx::Int)#::Int
+function arg_off(msg::OscMsg, idx::Int) #::Int
     if(!has_reserved(argType(msg,idx)))
-        return 0;
+        return 0
     end
 
-    #Iterate to the right position
-    args::ASCIIString = names(msg);
+    # Iterate to the right position
+    args::String = names(msg)
     argc::Int = 1
     pos::Int  = 1
 
-    #Get past the Argument String
-    while(msg.data[pos] != ',') pos += 1 end
+    # Get past the Argument String
+    while(msg.data[pos] != UInt8(',')) pos += 1 end
     while(msg.data[pos] != 0)   pos += 1 end
 
-    #Alignment
+    # Alignment
     pos = align(pos)
 
-    #ignore any leading '[' or ']'
+    # ignore any leading '[' or ']'
     while(args[argc] in "[]") argc += 1 end
 
     while(idx != 1)
-        bundle_length::Uint32 = 0;
+        bundle_length::UInt32 = 0
         arg = args[argc]
         argc += 1
-        if(arg in "htd")
-            pos +=8;
+        if arg in "htd"
+            pos +=8
         elseif(arg in "mrfci")
-            pos += 4;
+            pos += 4
         elseif(arg in "Ss")
             while(msg.data[pos += 1] != 0) end
             pos = align(pos)
-        elseif(arg == 'b')
-            bundle_length |= (msg.data[@incfp(pos)] << 24);
-            bundle_length |= (msg.data[@incfp(pos)] << 16);
-            bundle_length |= (msg.data[@incfp(pos)] << 8);
-            bundle_length |= (msg.data[@incfp(pos)]);
-            bundle_length += 4-bundle_length%4;
-            pos += bundle_length;
-        elseif(arg in "[]")#completely ignore array chars
-            idx += 1;
-        else #TFI
+        elseif arg == 'b'
+            bundle_length |= (msg.data[@incfp(pos)] << 24)
+            bundle_length |= (msg.data[@incfp(pos)] << 16)
+            bundle_length |= (msg.data[@incfp(pos)] << 8)
+            bundle_length |= (msg.data[@incfp(pos)])
+            bundle_length += 4-bundle_length%4
+            pos += bundle_length
+        elseif(arg in "[]") # completely ignore array chars
+            idx += 1
+        else # TFI
         end
         idx -= 1
     end
-    pos;
+    pos
 end
 
-#Calculate the size of the message without writing to a buffer
-function vsosc_null(address::ASCIIString,
-                    arguments::ASCIIString,
+# Calculate the size of the message without writing to a buffer
+function vsosc_null(address::String,
+                    arguments::String,
                     args...)
-    pos::Int  = length(address)+1
+    pos::Int  = length(address) + 1
     pos       = align(pos)
     pos      += 1+length(arguments)
     pos       = align(pos)
 
-    arg_pos = 1;
+    arg_pos = 1
 
-    #Take care of varargs
-    for(arg = arguments)
-        if(arg in "htd")
+    # Take care of varargs
+    for arg in arguments
+        if arg in "htd"
             arg_pos += 1
-            pos     += 8;
-        elseif(arg in "mrcfi")
+            pos     += 8
+        elseif arg in "mrcfi"
             arg_pos += 1
-            pos     += 4;
-        elseif(arg in "sS")
-            s::ASCIIString = args[@incfp(arg_pos)];
-            pos += length(s);
+            pos     += 4
+        elseif arg in "sS"
+            s::String = args[@incfp(arg_pos)]
+            pos += length(s)
             pos =  align(pos)
-        elseif(arg in "b")
+        elseif arg in "b"
             i::Int32 = sizeof(args[@incfp(arg_pos)])
-            pos += 4 + i;
+            pos += 4 + i
             pos  = align(pos)
-        end #other args classes are ignored
+        end # other args classes are ignored
     end
 
-    return pos-1;
+    return pos - 1
 end
 
-function rtosc_amessage(buffer::Array{Uint8},
+function rtosc_amessage(buffer::Array{UInt8},
                         len::Int,
-                        address::ASCIIString,
-                        arguments::ASCIIString,
+                        address::String,
+                        arguments::String,
                         args...)
-    total_len::Int = vsosc_null(address, arguments, args...);
+    total_len::Int = vsosc_null(address, arguments, args...)
 
-    for(i=1:total_len)
+    for i=1:total_len
         buffer[i] = 0
     end
 
-    #Abort if the message cannot fit
-    if(total_len>len)
-        return 0;
+    # Abort if the message cannot fit
+    if total_len > len
+        return 0
     end
 
-    pos::Int = 1;
+    pos::Int = 1
     #Address
-    for(C = address) buffer[@incfp(pos)] = C end
+    for C in address
+        buffer[@incfp(pos)] = C
+    end
     pos = align(pos)
 
     #Arguments
-    buffer[@incfp(pos)] = ',';
-    for(A=arguments) buffer[@incfp(pos)] = A; end
+    buffer[@incfp(pos)] = UInt8(',')
+    for A in arguments
+        buffer[@incfp(pos)] = A
+    end
     pos = align(pos)
 
-    arg_pos::Int = 1;
-    for(arg = arguments)
-        @assert(arg != 0);
-        if(arg in "htd")
-            d::Uint64 = reinterpret(Uint64, args[@incfp(arg_pos)]);
-            buffer[@incfp(pos)] = ((d>>56) & 0xff);
-            buffer[@incfp(pos)] = ((d>>48) & 0xff);
-            buffer[@incfp(pos)] = ((d>>40) & 0xff);
-            buffer[@incfp(pos)] = ((d>>32) & 0xff);
-            buffer[@incfp(pos)] = ((d>>24) & 0xff);
-            buffer[@incfp(pos)] = ((d>>16) & 0xff);
-            buffer[@incfp(pos)] = ((d>>8) & 0xff);
-            buffer[@incfp(pos)] = (d & 0xff);
-        elseif(arg in "rfci")
-            i::Int32 = reinterpret(Int32, args[@incfp(arg_pos)]);
-            buffer[@incfp(pos)] = ((i>>24) & 0xff);
-            buffer[@incfp(pos)] = ((i>>16) & 0xff);
-            buffer[@incfp(pos)] = ((i>>8) & 0xff);
-            buffer[@incfp(pos)] = (i & 0xff);
-        elseif(arg in "m")
-            m = args[@incfp(arg_pos)];
-            buffer[@incfp(pos)] = m[1];
-            buffer[@incfp(pos)] = m[2];
-            buffer[@incfp(pos)] = m[3];
-            buffer[@incfp(pos)] = m[4];
-        elseif(arg in "Ss")
-            s = args[@incfp(arg_pos)];
-            for(C = s)
+    arg_pos::Int = 1
+    for arg in arguments
+        @assert(UInt32(arg) != 0)
+        if arg in "htd"
+            d::UInt64 = reinterpret(UInt64, args[@incfp(arg_pos)])
+            buffer[@incfp(pos)] = ((d>>56) & 0xff)
+            buffer[@incfp(pos)] = ((d>>48) & 0xff)
+            buffer[@incfp(pos)] = ((d>>40) & 0xff)
+            buffer[@incfp(pos)] = ((d>>32) & 0xff)
+            buffer[@incfp(pos)] = ((d>>24) & 0xff)
+            buffer[@incfp(pos)] = ((d>>16) & 0xff)
+            buffer[@incfp(pos)] = ((d>>8) & 0xff)
+            buffer[@incfp(pos)] = (d & 0xff)
+        elseif arg in "rfci"
+            i::Int32 = reinterpret(Int32, args[@incfp(arg_pos)])
+            buffer[@incfp(pos)] = ((i>>24) & 0xff)
+            buffer[@incfp(pos)] = ((i>>16) & 0xff)
+            buffer[@incfp(pos)] = ((i>>8) & 0xff)
+            buffer[@incfp(pos)] = (i & 0xff)
+        elseif arg in "m"
+            m = args[@incfp(arg_pos)]
+            buffer[@incfp(pos)] = m[1]
+            buffer[@incfp(pos)] = m[2]
+            buffer[@incfp(pos)] = m[3]
+            buffer[@incfp(pos)] = m[4]
+        elseif arg in "Ss"
+            s = args[@incfp(arg_pos)]
+            for C in s
                 buffer[@incfp(pos)] = C
             end
             pos = align(pos)
-        elseif(arg == 'b')
-            b = args[@incfp(arg_pos)];
-            i = sizeof(b);
-            buffer[@incfp(pos)] = ((i>>24) & 0xff);
-            buffer[@incfp(pos)] = ((i>>16) & 0xff);
-            buffer[@incfp(pos)] = ((i>>8) & 0xff);
-            buffer[@incfp(pos)] = (i & 0xff);
-            for(U = b)
-                buffer[@incfp(pos)] = Uint8(U);
+        elseif arg == 'b'
+            b = args[@incfp(arg_pos)]
+            i = sizeof(b)
+            buffer[@incfp(pos)] = ((i>>24) & 0xff)
+            buffer[@incfp(pos)] = ((i>>16) & 0xff)
+            buffer[@incfp(pos)] = ((i>>8) & 0xff)
+            buffer[@incfp(pos)] = (i & 0xff)
+            for U in b
+                buffer[@incfp(pos)] = UInt8(U)
             end
             pos = align(pos)
         end
     end
 
-    return pos-1;
+    return pos - 1
 end
 
 OscMsg(address, arguments, args...) = message(address, arguments, args...)
 
-function message(address::ASCIIString,
-                 arguments::ASCIIString,
+function message(address::String,
+                 arguments::String,
                  args...)
-    len::Int = vsosc_null(address, arguments, args...);
-    data::Vector{Uint8} = Array(Uint8, len);
-    rtosc_amessage(data,len,address,arguments,args...);
+    len::Int = vsosc_null(address, arguments, args...)
+    data::Vector{UInt8} = Array{UInt8}(len)
+    rtosc_amessage(data,len,address,arguments,args...)
     return OscMsg(data)
 end
 
 function rtosc_argument(msg::OscMsg, idx::Int)
-    typeChar::Char = argType(msg, idx);
-    #trivial case
+    typeChar::Char = argType(msg, idx)
+    # trivial case
     if(!has_reserved(typeChar))
-        if(typeChar == 'T')
+        if typeChar == 'T'
             return true
-        elseif(typeChar == 'F')
-            return false;
+        elseif typeChar == 'F'
+            return false
         end
     else
         arg_pos::Int = arg_off(msg, idx)
 
-        if(typeChar in "htd")
-            t::Uint64 = 0
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 56);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 48);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 40);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 32);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 24);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 16);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]) << 8);
-            t |= (Uint64(msg.data[@incfp(arg_pos)]));
-            if(typeChar == 'h')
+        if typeChar in "htd"
+            t::UInt64 = 0
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 56)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 48)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 40)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 32)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 24)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 16)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]) << 8)
+            t |= (UInt64(msg.data[@incfp(arg_pos)]))
+            if typeChar == 'h'
                 return reinterpret(Int64, t)
-            elseif(typeChar == 'd')
-                return reinterpret(Float64, t);
+            elseif typeChar == 'd'
+                return reinterpret(Float64, t)
             else
-                return t;
+                return t
             end
-        elseif(typeChar in "f")
+        elseif typeChar in "f"
             return reinterpret(Float32,msg.data[arg_pos+(3:-1:0)])[1]
-        elseif(typeChar in "rci")
-            i::Uint32 = 0
-            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 24);
-            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 16);
-            i |= (Uint32(msg.data[@incfp(arg_pos)]) << 8);
-            i |= (Uint32(msg.data[@incfp(arg_pos)]));
-            if(typeChar == 'r')
-                return Uint32(i)
-            elseif(typeChar == 'c')
+        elseif typeChar in "rci"
+            i::UInt32 = 0
+            i |= (UInt32(msg.data[@incfp(arg_pos)]) << 24)
+            i |= (UInt32(msg.data[@incfp(arg_pos)]) << 16)
+            i |= (UInt32(msg.data[@incfp(arg_pos)]) << 8)
+            i |= (UInt32(msg.data[@incfp(arg_pos)]))
+            if typeChar == 'r'
+                return UInt32(i)
+            elseif typeChar == 'c'
                 return Char(i)
             else
-                return reinterpret(Int32, i);
+                return reinterpret(Int32, i)
             end
-        elseif(typeChar in "m")
-            m = Array(Uint8, 4)
+        elseif typeChar in "m"
+            m = Array{UInt8}(4)
             m[1] = msg.data[@incfp(arg_pos)]
             m[2] = msg.data[@incfp(arg_pos)]
             m[3] = msg.data[@incfp(arg_pos)]
             m[4] = msg.data[@incfp(arg_pos)]
             return m
-        elseif(typeChar in "b")
+        elseif typeChar in "b"
             len::Int32 = 0
-            len |= (msg.data[@incfp(arg_pos)] << 24);
-            len |= (msg.data[@incfp(arg_pos)] << 16);
-            len |= (msg.data[@incfp(arg_pos)] << 8);
-            len |= (msg.data[@incfp(arg_pos)]);
-            return msg.data[arg_pos+(0:len-1)];
-        elseif(typeChar in "Ss")
-            return stringify(msg.data[arg_pos:end]);
+            len |= (msg.data[@incfp(arg_pos)] << 24)
+            len |= (msg.data[@incfp(arg_pos)] << 16)
+            len |= (msg.data[@incfp(arg_pos)] << 8)
+            len |= (msg.data[@incfp(arg_pos)])
+            return msg.data[arg_pos+(0:len-1)]
+        elseif typeChar in "Ss"
+            return stringify(msg.data[arg_pos:end])
         end
     end
 
-    return nothing;
+    return nothing
 end
 
 getindex(msg::OscMsg, idx::Int) = rtosc_argument(msg, idx)
 
 function show(io::IO, msg::OscMsg)
     println(io, "OSC Message to ", stringify(msg.data))
-    println(io, "    Arguments:");
+    println(io, "    Arguments:")
     for i=1:narguments(msg)
         showField(io, msg,i)
     end
 end
 
 function showField(io::IO, msg::OscMsg, arg_id)
-    map = ['i' Int32; 'f' Float32; 's' String; 'b' :Blob; 'h' Int32; 't' Uint64;
-    'd' Float64; 'S' Symbol; 'c' Char; 'r' :RBG; 'm' :Midi; 'T' true;
-    'F' false; 'N' Nothing]
+    map = ['i' Int32;
+           'f' Float32;
+           's' String;
+           'b' :Blob;
+           'h' Int32;
+           't' UInt64;
+           'd' Float64;
+           'S' Symbol;
+           'c' Char;
+           'r' :RBG;
+           'm' :Midi;
+           'T' true;
+           'F' false;
+           'N' Void]
     dict = Dict{Char, Any}(zip(Vector{Char}(map[:,1][:]),map[:,2][:]))
     dict['I'] = Inf
     typeChar::Char = argType(msg, arg_id)
     value = msg[arg_id]
-    if(issubtype(typeof(value), Array))
+    if issubtype(typeof(value), Array)
         value = value'
     end
-    @printf(io, "    #%2d %c:", arg_id, typeChar);
+    @printf(io, "    #%2d %c:", arg_id, typeChar)
     println(dict[typeChar]," - ", value)
 end
 

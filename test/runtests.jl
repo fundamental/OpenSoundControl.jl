@@ -16,13 +16,12 @@
 
 
 using Base.Test
-require("OSC")
 using OSC
 
 test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
 
 
-#buffer = Array(Uint8,1024)
+#buffer = Array(UInt8,1024)
 #buf_size = rtosc_amessage(buffer, 1024, "/random/address", "sif",
 #                          "string", 0xdeadbeef, float32(12.0))
 #println()
@@ -39,15 +38,15 @@ test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
 function test_it_fat()
     i::Int32          = 42;             #integer
     f::Float32        = 0.25;           #float
-    s::ASCIIString    = "string";       #string
+    s::String         = "string";       #string
     b                 = s;              #blob
     h::Int64          = -125;           #long integer
-    t::Uint64         = 22412;          #timetag
+    t::UInt64         = 22412;          #timetag
     d::Float64        = 0.125;          #double
-    S::ASCIIString    = "Symbol";       #symbol
+    S::String         = "Symbol";       #symbol
     c::Char           = 'J';            #character
     r::Int32          = 0x12345678;     #RGBA
-    m::Array{Uint8,1} = [0x12,0x23,     #midi
+    m::Array{UInt8,1} = [0x12,0x23,     #midi
                          0x34,0x45];
     #true
     #false
@@ -80,7 +79,7 @@ end
 
 function test_it_osc_spec()
     println("Starting OSC Spec...")
-    message_one::Array{Uint8} = [
+    message_one::Array{UInt8} = [
     0x2f, 0x6f, 0x73, 0x63,
     0x69, 0x6c, 0x6c, 0x61,
     0x74, 0x6f, 0x72, 0x2f,
@@ -91,7 +90,7 @@ function test_it_osc_spec()
     0x43, 0xdc, 0x00, 0x00,
     ];
 
-    message_two::Array{Uint8} = [
+    message_two::Array{UInt8} = [
     0x2f, 0x66, 0x6f, 0x6f, #4
     0x00, 0x00, 0x00, 0x00, #8
     0x2c, 0x69, 0x69, 0x73,
