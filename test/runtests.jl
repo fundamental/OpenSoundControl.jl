@@ -116,7 +116,7 @@ function test_it_osc_spec()
     osc = OscMsg("/foo", "iisff", Int32(1000), Int32(-1), "hello", Float32(1.234), Float32(5.678))
     println(string(map(x->(hex(x,2)), osc.data)...))
     println(string(map(x->(hex(x,2)), message_two)...))
-    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ".  "), osc.data)...))
+    println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), osc.data)...))
     println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), message_two)...))
     @test length(osc.data) == length(message_two)
     @test osc.data == message_two

@@ -310,7 +310,7 @@ function show(io::IO, msg::OscMsg)
 end
 
 function showField(io::IO, msg::OscMsg, arg_id)
-    map = ['i' Int32;
+    map = Any['i' Int32;
            'f' Float32;
            's' String;
            'b' :Blob;
