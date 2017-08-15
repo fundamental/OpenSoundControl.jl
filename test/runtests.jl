@@ -23,11 +23,11 @@ test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
 
 #buffer = Array(UInt8,1024)
 #buf_size = rtosc_amessage(buffer, 1024, "/random/address", "sif",
-#                          "string", 0xdeadbeef, float32(12.0))
+#                          "string", 0xdeadbeef, Float32(12.0))
 #println()
 ##println(buffer)
 #println(string(map(x->(hex(x,2)), buffer[1:buf_size])...))
-#println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:buf_size])...))
+#println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), buffer[1:buf_size])...))
 #println("argument string is=", rtosc_argument_string(buffer))
 #
 #println("arg 0=", rtosc_argument(buffer, 0))
@@ -57,7 +57,7 @@ function test_it_fat()
     show(msg)
 
     #println(string(map(x->(hex(x,2)), buffer[1:len])...))
-    #println(string(map(x->(isprint(char(x&0x7f)) ? string(char(x&0x7f)," ") : ". "), buffer[1:len])...))
+    #println(string(map(x->(isprint(Char(x&0x7f)) ? string(Char(x&0x7f)," ") : ". "), buffer[1:len])...))
     #println("argument string is=", rtosc_argument_string(buffer))
 
     @test msg[1]  == i

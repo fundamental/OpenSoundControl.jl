@@ -25,7 +25,7 @@ macro incfp(x) quote begin
             gensym_
 end end end
 
-type OscMsg
+struct OscMsg
     data::Array{UInt8}
 end
 
@@ -263,7 +263,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
                 return t
             end
         elseif typeChar in "f"
-            return reinterpret(Float32,msg.data[arg_pos+(3:-1:0)])[1]
+            return read(IOBuffer(msg.data[arg_pos+(3:-1:0)]), Float32)
         elseif typeChar in "rci"
             i::UInt32 = 0
             i |= (UInt32(msg.data[@incfp(arg_pos)]) << 24)
@@ -323,12 +323,12 @@ function showField(io::IO, msg::OscMsg, arg_id)
            'm' :Midi;
            'T' true;
            'F' false;
+           'I' Inf;
            'N' Void]
     dict = Dict{Char, Any}(zip(Vector{Char}(map[:,1][:]),map[:,2][:]))
-    dict['I'] = Inf
     typeChar::Char = argType(msg, arg_id)
     value = msg[arg_id]
-    if issubtype(typeof(value), Array)
+    if typeof(value) <: Array
         value = value'
     end
     @printf(io, "    #%2d %c:", arg_id, typeChar)
