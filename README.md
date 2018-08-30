@@ -8,7 +8,7 @@ used in networked control of musical applications.
 The code is based on a relatively straightforward translation of
 librtosc(https://github.com/fundamental/rtosc)
 
-##Sample Usage
+## Sample Usage
 
 ```julia
 i = Int32(          42         ); #integer
@@ -57,7 +57,7 @@ OSC Message to /dest
 Accessing the fields is done via the [] operator.
 
 
-##Networked Usage
+## Networked Usage
 
 Most of the usage is going to involve sending the OSC messages over UDP to
 another program.
@@ -83,11 +83,11 @@ send(sock1, ip"127.0.0.1", 7777, msg1.data)
 ```
 
 
-##TODO
+## TODO
 
 - Port bundle message support from librtosc
 
-##LICENSE
+## LICENSE
 
 OSC.jl is licensed under the LGPLv3 License
 
