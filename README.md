@@ -11,18 +11,18 @@ librtosc(https://github.com/fundamental/rtosc)
 ##Sample Usage
 
 ```julia
-i::Int32          = 42;             #integer
-f::Float32        = 0.25;           #float
-s::ASCIIString    = "string";       #string
-b                 = s;              #blob
-h::Int64          = -125;           #long integer
-t::Uint64         = 22412;          #timetag
-d::Float64        = 0.125;          #double
-S::ASCIIString    = "Symbol";       #symbol
-c::Char           = 'J';            #character
-r::Int32          = 0x12345678;     #RGBA
-m::Array{Uint8,1} = [0x12,0x23,     #midi
-                     0x34,0x45];
+i = Int32(          42         ); #integer
+f = Float32(        0.25;      ); #float
+s =                "string"       #string
+b =                 s;            #blob
+h = Int64(          -125;      ); #long integer
+t = UInt64(         22412;     ); #timetag
+d = Float64(        0.125;     ); #double
+S =                 "Symbol"      #symbol
+c = Char(           'J'        ); #character
+r = Int32(          0x12345678 ); #RGBA
+m = Array{UInt8,1}( [0x12,0x23,   #midi
+                     0x34,0x45]);
 #true
 #false
 #nil
@@ -66,7 +66,7 @@ In the first one run
 
 ```julia
 using OSC
-sock2 = UdpSocket()
+sock2 = UDPSocket()
 bind(sock2, ip"127.0.0.1", 7777)
 msg2 = OscMsg(recv(sock2))
 ```
@@ -76,7 +76,7 @@ To send the an OSC message, in the second window type.
 
 ```julia
 using OSC
-sock1 = UdpSocket()
+sock1 = UDPSocket()
 msg1 = OSC.message("/hello world", "sSif", "strings", "symbols", 234,
 float32(2.3))
 send(sock1, ip"127.0.0.1", 7777, msg1.data)
