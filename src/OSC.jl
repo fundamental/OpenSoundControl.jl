@@ -1,5 +1,5 @@
 # OSC.jl
-# Copyright (c) 2014, Mark McCurry, All rights reserved.
+# Copyright (c) 2018, Mark McCurry, All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
 
 module OSC
 
+using Printf
 import Base: show, getindex
 export OscMsg, path
 
