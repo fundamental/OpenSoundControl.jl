@@ -16,7 +16,7 @@
 
 module OSC
 
-using Base.Printf
+using Printf
 import Base: show, getindex
 export OscMsg, path
 
@@ -325,7 +325,7 @@ function showField(io::IO, msg::OscMsg, arg_id)
            'T' true;
            'F' false;
            'I' Inf;
-           'N' Void]
+           'N' Nothing]
     dict = Dict{Char, Any}(zip(Vector{Char}(map[:,1][:]),map[:,2][:]))
     typeChar::Char = argType(msg, arg_id)
     value = msg[arg_id]
