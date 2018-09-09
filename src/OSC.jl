@@ -279,7 +279,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
                 return reinterpret(Int32, i)
             end
         elseif typeChar in "m"
-            m = Array{UInt8}(4)
+            m = Array{UInt8}(undef, 4)
             m[1] = msg.data[@incfp(arg_pos)]
             m[2] = msg.data[@incfp(arg_pos)]
             m[3] = msg.data[@incfp(arg_pos)]
@@ -331,6 +331,9 @@ function showField(io::IO, msg::OscMsg, arg_id)
     value = msg[arg_id]
     if typeof(value) <: Array
         value = value'
+    end
+    if(value == nothing)
+        value = "nothing"
     end
     @printf(io, "    #%2d %c:", arg_id, typeChar)
     println(dict[typeChar]," - ", value)

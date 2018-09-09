@@ -15,7 +15,7 @@
 #License along with this library.
 
 
-using Base.Test
+using Test
 using OSC
 
 test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
