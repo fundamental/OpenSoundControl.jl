@@ -33,7 +33,7 @@ end
 path(msg::OscMsg) = stringify(msg.data)
 
 function stringify(data::Array{UInt8})
-    zeroInd = find(data.== 0)
+    zeroInd = findall(data.== 0)
     if length(zeroInd) == 0
         return string(map(Char, data)...)
     elseif zeroInd[1] == 0
@@ -50,7 +50,7 @@ function names(msg::OscMsg) #::String
     return stringify(msg.data[pos+1:end])   #skip comma
 end
 
-strip_args(args::AbstractString) = replace(replace(args,"]",""),"[","")
+strip_args(args::AbstractString) = replace(replace(args,"]"=>""),"["=>"")
 
 function narguments(msg::OscMsg)
     length(strip_args(names(msg)))
@@ -229,7 +229,7 @@ function message(address::String,
                  arguments::String,
                  args...)
     len::Int = vsosc_null(address, arguments, args...)
-    data::Vector{UInt8} = Array{UInt8}(len)
+    data::Vector{UInt8} = Array{UInt8}(undef, len)
     rtosc_amessage(data,len,address,arguments,args...)
     return OscMsg(data)
 end
@@ -264,7 +264,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
                 return t
             end
         elseif typeChar in "f"
-            return read(IOBuffer(msg.data[arg_pos+(3:-1:0)]), Float32)
+            return read(IOBuffer(msg.data[arg_pos.+(3:-1:0)]), Float32)
         elseif typeChar in "rci"
             i::UInt32 = 0
             i |= (UInt32(msg.data[@incfp(arg_pos)]) << 24)
@@ -274,7 +274,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             if typeChar == 'r'
                 return UInt32(i)
             elseif typeChar == 'c'
-                return Char(i)
+                return Char(i/(2^24))
             else
                 return reinterpret(Int32, i)
             end
@@ -291,7 +291,7 @@ function rtosc_argument(msg::OscMsg, idx::Int)
             len |= (msg.data[@incfp(arg_pos)] << 16)
             len |= (msg.data[@incfp(arg_pos)] << 8)
             len |= (msg.data[@incfp(arg_pos)])
-            return msg.data[arg_pos+(0:len-1)]
+            return msg.data[arg_pos.+(0:len-1)]
         elseif typeChar in "Ss"
             return stringify(msg.data[arg_pos:end])
         end
