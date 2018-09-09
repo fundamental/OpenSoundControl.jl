@@ -16,7 +16,7 @@
 
 module OSC
 
-using Base.Printf
+using Printf
 import Base: show, getindex
 export OscMsg, path
 
