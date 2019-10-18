@@ -1,0 +1,10 @@
+name = "OSC"
+uuid = "3056fc7c-1591-4fe0-9dc2-d5f6f61f2a7b"
+authors = ["fundamental <mark.d.mccurry@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[compat]
+julia = "1"
