@@ -1,5 +1,5 @@
-# OSC.jl
-# Copyright (c) 2018, Mark McCurry, All rights reserved.
+# OpenSoundControl.jl
+# Copyright (c) 2019, Mark McCurry, All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-module OSC
+module OpenSoundControl
 
 using Printf
 import Base: show, getindex

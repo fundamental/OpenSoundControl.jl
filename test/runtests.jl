@@ -1,5 +1,5 @@
-#OSC.jl
-#Copyright (c) 2014, Mark McCurry, All rights reserved.
+#OpenSoundControl.jl
+#Copyright (c) 2019, Mark McCurry, All rights reserved.
 #
 #This library is free software; you can redistribute it and/or
 #modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
 
 
 using Test
-using OSC
+using OpenSoundControl
 
 test_type = length(ARGS) == 1 ? ARGS[1] : "ALL"
 
@@ -63,7 +63,7 @@ function test_it_fat()
     @test msg[1]  == i
     @test msg[2]  == f
     @test msg[3]  == s
-    @test OSC.stringify(msg[4]) == b
+    @test OpenSoundControl.stringify(msg[4]) == b
     @test msg[5]  == h
     @test msg[6]  == t
     @test msg[7]  == d
@@ -71,10 +71,10 @@ function test_it_fat()
     @test msg[9]  == c
     @test msg[10]  == r
     @test msg[11] == m
-    @test OSC.argType(msg,12) == 'T'
-    @test OSC.argType(msg,13) == 'F'
-    @test OSC.argType(msg,14) == 'N'
-    @test OSC.argType(msg,15) == 'I'
+    @test OpenSoundControl.argType(msg,12) == 'T'
+    @test OpenSoundControl.argType(msg,13) == 'F'
+    @test OpenSoundControl.argType(msg,14) == 'N'
+    @test OpenSoundControl.argType(msg,15) == 'I'
 end
 
 function test_it_osc_spec()

@@ -1,7 +1,7 @@
-name = "OSC"
-uuid = "3056fc7c-1591-4fe0-9dc2-d5f6f61f2a7b"
+name = "OpenSoundControl"
+uuid = "2ff8ee2d-9747-4b2b-b699-45d473b7b9df"
 authors = ["fundamental <mark.d.mccurry@gmail.com>"]
-version = "0.1.1"
+version = "1.0.0"
 
 [deps]
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
