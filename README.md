@@ -65,20 +65,22 @@ To do this, first start two julia instances.
 In the first one run
 
 ```julia
-using OSC
+using Sockets
+using OpenSoundControl
 sock2 = UDPSocket()
 bind(sock2, ip"127.0.0.1", 7777)
 msg2 = OscMsg(recv(sock2))
+show(msg2)
 ```
 
 The first instance will now wait for the second to send an OSC message.
 To send the an OSC message, in the second window type.
 
 ```julia
-using OSC
+using Sockets
+using OpenSoundControl
 sock1 = UDPSocket()
-msg1 = OSC.message("/hello world", "sSif", "strings", "symbols", 234,
-float32(2.3))
+msg1 = OpenSoundControl.message("/hello world", "sSif", "strings", "symbols", Int32(234), Float32(2.3))
 send(sock1, ip"127.0.0.1", 7777, msg1.data)
 ```
 
